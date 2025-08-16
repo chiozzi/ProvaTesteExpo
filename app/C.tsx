@@ -1,59 +1,91 @@
 import React, { useState } from "react";
-import { View, Text, Button, ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, Button, StyleSheet, Text, View } from "react-native";
 
-// Interface que define o formato (tipo) dos dados retornados da API
-export interface Fact {
+// Definindo o "tipo" (interface) para os dados que a API retorna
+interface Fact {
   id: string;
   text: string;
   source: string;
-  source_url: string;
-  language: string;
-  permalink: string;
 }
 
 export default function C() {
-  const [fato, setFato] = useState<Fact | null>(null);   // guarda o fato trazido da API
-  const [carregando, setCarregando] = useState(false);   // controla se está carregando ou não
+  // fact guarda o dado retornado pela API
+  const [fact, setFact] = useState<Fact | null>(null);
+  // loading indica se a API ainda está carregando
+  const [loading, setLoading] = useState(false);
 
-  // Função executada toda vez que o usuário clica no botão
-  async function buscarFato() {
-    setCarregando(true);        // ativa o loading
+  // Função chamada ao clicar no botão
+  const buscarFato = async () => {
     try {
-      // faz a requisição no endpoint informado na atividade
-      const r = await fetch("https://uselessfacts.jsph.pl/api/v2/facts/random");
-      const info: Fact = await r.json(); // converte o retorno para o formato (interface) Fact
-      setFato(info);                     // guarda o dado recebido
-    } catch (e) {
-      console.log("Erro:", e);
+      setLoading(true); // mostra o loading
+      // Faz a requisição ao endpoint
+      const response = await fetch("https://uselessfacts.jsph.pl/api/v2/facts/random");
+      const data = await response.json();
+
+      // Salva os dados recebidos dentro do "tipo" Fact
+      const novoFato: Fact = {
+        id: data.id,
+        text: data.text,
+        source: data.source,
+      };
+
+      setFact(novoFato); // guarda o resultado no state
+    } catch (error) {
+      console.error("Erro ao buscar fato:", error);
+    } finally {
+      setLoading(false); // esconde o loading
     }
-    setCarregando(false);      // desativa o loading ao terminar
-  }
+  };
 
   return (
-    <View style={s.container}>
-      <Text style={s.titulo}>Página C</Text>
+    <View style={styles.container}>
+      <Text style={styles.titulo}>Página C</Text>
+      {/* Botão para buscar o fato */}
+      <Button title="Buscar Fato Aleatório" onPress={buscarFato} />
 
-      {/* Botão que chama a API quando clicado */}
-      <Button title="Novo Fato Curioso" onPress={buscarFato} disabled={carregando} />
+      {/* Mostra o loading enquanto espera a API */}
+      {loading && <ActivityIndicator size="large" color="blue" style={{ marginTop: 20 }} />}
 
-      {/* Loading girando enquanto espera a resposta */}
-      {carregando && <ActivityIndicator style={{ marginTop: 20 }} />}
-
-      {/* Só mostra o fato se já existir retorno da API */}
-      {fato && (
-        <View style={s.caixa}>
-          <Text style={s.texto}>{fato.text}</Text>
-          <Text style={s.fonte}>Fonte: {fato.source || "Sem fonte"}</Text>
+      {/* Mostra o fato retornado pela API quando existir */}
+      {fact && (
+        <View style={styles.card}>
+          <Text style={styles.texto}>{fact.text}</Text>
+          <Text style={styles.fonte}>Fonte: {fact.source}</Text>
         </View>
       )}
     </View>
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: "#d88bddff" },
-  titulo: { fontSize: 24, marginBottom: 20, fontWeight: "bold", color: "#fff" },
-  caixa: { width: "100%", backgroundColor: "#fff", padding: 15, borderRadius: 10, marginTop: 20 },
-  texto: { fontSize: 18, fontWeight: "bold", color: "#59035fff" },
-  fonte: { color: "#59035fff", marginTop: 5 },
+// Estilos básicos da tela
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#d88bddff",
+  },
+
+  titulo: { 
+    fontSize: 20, 
+    marginBottom: 20, 
+    fontWeight: "bold" 
+  },
+  card: {
+    marginTop: 20,
+    padding: 15,
+    borderWidth: 1,
+    borderRadius: 10,
+    width: "100%",
+    backgroundColor: "#f5f5f5",
+  },
+  texto: { 
+    fontSize: 16, 
+    marginBottom: 10 
+  },
+  fonte: { 
+    fontSize: 12, 
+    color: "gray" 
+  },
 });
