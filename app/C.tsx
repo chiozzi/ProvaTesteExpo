@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Button, ActivityIndicator, StyleSheet } from "react-native";
 
+// Interface que define o formato (tipo) dos dados retornados da API
 export interface Fact {
   id: string;
   text: string;
@@ -11,28 +12,34 @@ export interface Fact {
 }
 
 export default function C() {
-  const [fato, setFato] = useState<Fact | null>(null);  // guarda os dados da API
-  const [carregando, setCarregando] = useState(false);  // controle do loading
+  const [fato, setFato] = useState<Fact | null>(null);   // guarda o fato trazido da API
+  const [carregando, setCarregando] = useState(false);   // controla se está carregando ou não
 
+  // Função executada toda vez que o usuário clica no botão
   async function buscarFato() {
-    setCarregando(true);              // começa o loading
+    setCarregando(true);        // ativa o loading
     try {
+      // faz a requisição no endpoint informado na atividade
       const r = await fetch("https://uselessfacts.jsph.pl/api/v2/facts/random");
-      const info: Fact = await r.json(); // converte pra interface Fact
-      setFato(info);
+      const info: Fact = await r.json(); // converte o retorno para o formato (interface) Fact
+      setFato(info);                     // guarda o dado recebido
     } catch (e) {
       console.log("Erro:", e);
     }
-    setCarregando(false);             // encerra o loading
+    setCarregando(false);      // desativa o loading ao terminar
   }
 
   return (
     <View style={s.container}>
       <Text style={s.titulo}>Página C</Text>
+
+      {/* Botão que chama a API quando clicado */}
       <Button title="Novo Fato Curioso" onPress={buscarFato} disabled={carregando} />
 
+      {/* Loading girando enquanto espera a resposta */}
       {carregando && <ActivityIndicator style={{ marginTop: 20 }} />}
 
+      {/* Só mostra o fato se já existir retorno da API */}
       {fato && (
         <View style={s.caixa}>
           <Text style={s.texto}>{fato.text}</Text>
